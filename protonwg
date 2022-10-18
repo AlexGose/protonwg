@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# Use ProtonVPN with Wireguard config files on Ubuntu 20.04
+
+error() {
+  echo "ERROR: $1" >&2
+  exit 1
+}
+
+usage() {
+  echo "Usage: proton_wireguard OPTIONS
+    OPTIONS
+      -h                         Help.  Prints this help message
+      -d                         Disable Docker
+      -f                         Set UFW firewall rules
+      -n <network interface>     VPN network interface for firewall rules
+      -a <ip address>            VPN IP address for firewall rules
+      -l <lan subnet>            LAN subnet for firewall (default 
+                                 192.168.1.0/24)
+      -s                         Show connection, docker, and ufw status
+      -r                         Reboot computer when done"
+  exit 0
+}
+
+disable_docker() {
+  sudo systemctl stop docker
+  sudo systemctl disable docker
+}
+
+set_firewall_rules() {
+  set_kill_switch $1 $2
+  enable_split_tunneling $3
+  sudo ufw enable
+}
+
+set_kill_switch() {
+  sudo ufw default deny outgoing
+  sudo ufw default deny incoming
+  sudo ufw allow out on "$1" from any to any
+  sudo ufw allow out to "$2" port 51820 proto udp
+}
+
+enable_split_tunneling() {
+  sudo ufw allow out to "$1"
+}
+
+
+print_status() {
+  echo "Active connections status:"
+  nmcli c s -a | cat
+  echo
+  echo "Docker service status:"
+  sudo systemctl --type=service | grep -i docker
+  echo
+  echo "UFW status:"
+  sudo ufw status
+}
+
+main() {
+  local reboot
+  reboot="false"
+  local firewall_rules
+  firewall_rules="false"
+  local interface_provided
+  interface_provided="false"
+  local ip_address_provided
+  ip_address_provided="false"
+  local show_status
+  show_status="false"
+  local lan_subnet
+  lan_subnet="192.168.1.0/24"
+
+  while getopts :fdrhn:a:sl: opt; do
+    case "${opt}" in
+      h) usage ;;
+      d) disable_docker ;;
+      f) firewall_rules="true" ;;
+      r) reboot="true" ;;
+      n)
+        net_interface="${OPTARG}"
+        interface_provided="true"
+        ;;
+      a)
+        ip_address="${OPTARG}"
+        ip_address_provided="true"
+        ;;
+      l) lan_subnet="${OPTARG}" ;;
+      s) show_status="true" ;;
+      ?) error "unrecognized command line option: ${opt}" ;;
+    esac
+  done
+
+  if [[ "${firewall_rules}" == "true" ]]; then
+    if [[ "${interface_provided}" == "true" ]] && \
+       [[ "${ip_address_provided}" == "true" ]]; then
+      set_firewall_rules "${net_interface}" "${ip_address}" \
+	      "${lan_subnet}"
+    else
+      error "network interface and ip address must be included with -f"
+    fi
+  fi
+  
+  if [[ "${show_status}" == "true" ]]; then
+    print_status
+  fi
+
+  if [[ "${reboot}" == "true" ]]; then
+    sudo shutdown -r now
+  fi
+}
+
+main "$@"
