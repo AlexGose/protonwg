@@ -19,7 +19,6 @@ usage() {
                                  192.168.1.0/24)
       -s                         Show connection, docker, and ufw status
       -r                         Reboot computer when done"
-  exit 0
 }
 
 disable_docker() {
@@ -72,7 +71,7 @@ main() {
 
   while getopts :fdrhn:a:sl: opt; do
     case "${opt}" in
-      h) usage ;;
+      h) usage; exit 0 ;;
       d) disable_docker ;;
       f) firewall_rules="true" ;;
       r) reboot="true" ;;
@@ -86,7 +85,7 @@ main() {
         ;;
       l) lan_subnet="${OPTARG}" ;;
       s) show_status="true" ;;
-      ?) error "unrecognized command line option: ${opt}" ;;
+      ?) usage; error "unrecognized command line option: ${opt}" ;;
     esac
   done
 
