@@ -8,7 +8,7 @@ error() {
 }
 
 usage() {
-  echo "Usage: proton_wireguard OPTIONS
+  echo "Usage: protonwg OPTIONS
     OPTIONS
       -h                         Help.  Prints this help message
       -d                         Disable Docker
