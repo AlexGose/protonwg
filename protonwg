@@ -28,7 +28,7 @@ disable_docker() {
 
 set_firewall_rules() {
   set_kill_switch $1 $2
-  enable_split_tunneling $3
+  enable_lan_access $3
   sudo ufw enable
 }
 
@@ -39,7 +39,7 @@ set_kill_switch() {
   sudo ufw allow out to "$2" port 51820 proto udp
 }
 
-enable_split_tunneling() {
+enable_lan_access() {
   sudo ufw allow out to "$1"
 }
 
