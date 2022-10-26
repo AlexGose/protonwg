@@ -11,13 +11,15 @@ usage() {
   echo "Usage: protonwg OPTIONS
     OPTIONS
       -h                         Help.  Prints this help message
+      -c                         Connect to the VPN server
       -d                         Disable Docker
       -f                         Set UFW firewall rules
-      -n <network interface>     VPN network interface for firewall rules
-      -a <ip address>            VPN IP address for firewall rules
-      -l <lan subnet>            LAN subnet for firewall (default 
+      -n <network interface>     VPN network interface for firewall rules and
+                                 connecting to VPN
+      -a <ip address>            VPN server IP address for firewall rules
+      -l <lan subnet>            LAN subnet for firewall rules (default 
                                  192.168.1.0/24)
-      -s                         Show connection, docker, and ufw status
+      -s                         Show connection, docker, and UFW status
       -r                         Reboot computer when done"
 }
 
@@ -91,8 +93,10 @@ main() {
   show_status="false"
   local lan_subnet
   lan_subnet="192.168.1.0/24"
+  local connect_to_vpn
+  connect_to_vpn="false"
 
-  while getopts :fdrhn:a:sl: opt; do
+  while getopts :fdrhn:a:sl:c opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       d) disable_docker ;;
@@ -107,6 +111,7 @@ main() {
         ip_address_provided="true"
         ;;
       l) lan_subnet="${OPTARG}" ;;
+      c) connect_to_vpn="true" ;;
       s) show_status="true" ;;
       ?) usage; error "unrecognized command line option: ${opt}" ;;
     esac
@@ -119,6 +124,14 @@ main() {
 	      "${lan_subnet}"
     else
       error "network interface and ip address must be included with -f"
+    fi
+  fi
+
+  if [[ "${connect_to_vpn}" == "true" ]]; then
+    if [[ "${interface_provided}" == "true" ]]; then
+      nmcli connection up id "${net_interface}"
+    else
+      error "network interface must be included with -c"
     fi
   fi
   
