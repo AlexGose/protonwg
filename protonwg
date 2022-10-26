@@ -26,9 +26,32 @@ disable_docker() {
   sudo systemctl disable docker
 }
 
+docker_is_enabled() {
+  local interface_name
+  interface_name="$(nmcli --get-value name connection show --active | \
+      grep docker0)"
+  if [[ -n "${interface_name}" ]]; then
+    echo "true"
+  else
+    echo "false"
+  fi
+}
+
+enable_docker_host_access() {
+  sudo ufw allow out on docker0 from 172.17.0.0/16
+}
+
+enable_docker_bridge() {
+  sudo ufw allow in on docker0 from 172.17.0.0/16 to 172.17.0.0/16
+}
+
 set_firewall_rules() {
   set_kill_switch $1 $2
   enable_lan_access $3
+  if [[ "$(docker_is_enabled)" == "true" ]]; then
+    enable_docker_bridge
+    enable_docker_host_access
+  fi
   sudo ufw enable
 }
 
