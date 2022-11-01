@@ -22,6 +22,8 @@ usage() {
       -d                         Disable Docker
       -D                         Enable Docker
       -f                         Set UFW firewall rules
+      -F                         Reset (disable) UFW firewall rules.  Will
+                                 occur before any new rules are set
       -n <network interface>     VPN network interface for firewall rules and
                                  connecting to, or disconnecting from, the VPN
       -a <ip address>            VPN server IP address for firewall rules
@@ -57,6 +59,10 @@ set_firewall_rules() {
     enable_docker_host_access
   fi
   ufw enable
+}
+
+reset_firewall() {
+  ufw --force reset
 }
 
 set_kill_switch() {
@@ -114,12 +120,13 @@ main() {
   local show_status
   show_status="false"
 
-  while getopts :fdDrhn:a:sl:cC opt; do
+  while getopts :fFdDrhn:a:sl:cC opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       d) disable_docker ;;
       D) enable_docker ;;
       f) firewall_rules="true" ;;
+      F) reset_firewall ;;
       r) reboot="true" ;;
       n) net_interface="${OPTARG}" ;;
       a) ip_address="${OPTARG}" ;;
