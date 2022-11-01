@@ -31,8 +31,8 @@ usage() {
 }
 
 disable_docker() {
-  sudo systemctl stop docker
-  sudo systemctl disable docker
+  systemctl stop docker
+  systemctl disable docker
 }
 
 docker_is_enabled() {
@@ -47,11 +47,11 @@ docker_is_enabled() {
 }
 
 enable_docker_host_access() {
-  sudo ufw allow out on docker0 from 172.17.0.0/16
+  ufw allow out on docker0 from 172.17.0.0/16
 }
 
 enable_docker_bridge() {
-  sudo ufw allow in on docker0 from 172.17.0.0/16 to 172.17.0.0/16
+  ufw allow in on docker0 from 172.17.0.0/16 to 172.17.0.0/16
 }
 
 set_firewall_rules() {
@@ -61,18 +61,18 @@ set_firewall_rules() {
     enable_docker_bridge
     enable_docker_host_access
   fi
-  sudo ufw enable
+  ufw enable
 }
 
 set_kill_switch() {
-  sudo ufw default deny outgoing
-  sudo ufw default deny incoming
-  sudo ufw allow out on "$1" from any to any
-  sudo ufw allow out to "$2" port 51820 proto udp
+  ufw default deny outgoing
+  ufw default deny incoming
+  ufw allow out on "$1" from any to any
+  ufw allow out to "$2" port 51820 proto udp
 }
 
 enable_lan_access() {
-  sudo ufw allow out to "$1"
+  ufw allow out to "$1"
 }
 
 
@@ -81,10 +81,10 @@ print_status() {
   nmcli c s -a | cat
   echo
   echo "Docker service status:"
-  sudo systemctl --type=service | grep -i docker
+  systemctl --type=service | grep -i docker
   echo
   echo "UFW status:"
-  sudo ufw status
+  ufw status
 }
 
 connect() {
@@ -156,7 +156,7 @@ main() {
   fi
 
   if [[ "${reboot}" == "true" ]]; then
-    sudo shutdown -r now
+    shutdown -r now
   fi
 }
 
