@@ -7,15 +7,22 @@ error() {
   exit 1
 }
 
+assert_both_not_true() {
+  if [[ "$1" == "true" ]] && [[ "$2" == "true" ]]; then
+    error "Cannot use both command line options $3 and $4"
+  fi
+}
+
 usage() {
   echo "Usage: protonwg OPTIONS
     OPTIONS
       -h                         Help.  Prints this help message
       -c                         Connect to the VPN server
+      -C                         Disconnect from the VPN server
       -d                         Disable Docker
       -f                         Set UFW firewall rules
       -n <network interface>     VPN network interface for firewall rules and
-                                 connecting to VPN
+                                 connecting to, or disconnecting from, the VPN
       -a <ip address>            VPN server IP address for firewall rules
       -l <lan subnet>            LAN subnet for firewall rules (default 
                                  192.168.1.0/24)
@@ -80,6 +87,22 @@ print_status() {
   sudo ufw status
 }
 
+connect() {
+  if [[ -n "$1" ]]; then
+    nmcli connection up id "$1"
+  else
+    error "network interface must be included with -c"
+  fi
+}
+
+disconnect() {
+  if [[ -n "$1" ]]; then
+    nmcli connection down id "$1"
+  else
+    error "network interface must be included with -C"
+  fi
+}
+
 main() {
   local firewall_rules
   firewall_rules="false"
@@ -91,10 +114,12 @@ main() {
   lan_subnet="192.168.1.0/24"
   local connect_to_vpn
   connect_to_vpn="false"
+  local disconnect_from_vpn
+  disconnect_from_vpn="false"
   local show_status
   show_status="false"
 
-  while getopts :fdrhn:a:sl:c opt; do
+  while getopts :fdrhn:a:sl:cC opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       d) disable_docker ;;
@@ -104,6 +129,7 @@ main() {
       a) ip_address="${OPTARG}" ;;
       l) lan_subnet="${OPTARG}" ;;
       c) connect_to_vpn="true" ;;
+      C) disconnect_from_vpn="true" ;;
       s) show_status="true" ;;
       ?) usage; error "unrecognized command line option: ${opt}" ;;
     esac
@@ -117,14 +143,14 @@ main() {
     fi
   fi
 
+  assert_both_not_true "${connect_to_vpn}" "${disconnect_from_vpn}" "-c" "-C"
   if [[ "${connect_to_vpn}" == "true" ]]; then
-    if [[ -n "${net_interface}" ]]; then
-      nmcli connection up id "${net_interface}"
-    else
-      error "network interface must be included with -c"
-    fi
+    connect "${net_interface}"
   fi
-  
+  if [[ "${disconnect_from_vpn}" == "true" ]]; then
+    disconnect "${net_interface}"
+  fi
+
   if [[ "${show_status}" == "true" ]]; then
     print_status
   fi
