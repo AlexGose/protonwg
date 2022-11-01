@@ -81,20 +81,18 @@ print_status() {
 }
 
 main() {
-  local reboot
-  reboot="false"
   local firewall_rules
   firewall_rules="false"
-  local interface_provided
-  interface_provided="false"
-  local ip_address_provided
-  ip_address_provided="false"
-  local show_status
-  show_status="false"
+  local reboot
+  reboot="false"
+  local net_interface
+  local ip_address
   local lan_subnet
   lan_subnet="192.168.1.0/24"
   local connect_to_vpn
   connect_to_vpn="false"
+  local show_status
+  show_status="false"
 
   while getopts :fdrhn:a:sl:c opt; do
     case "${opt}" in
@@ -102,14 +100,8 @@ main() {
       d) disable_docker ;;
       f) firewall_rules="true" ;;
       r) reboot="true" ;;
-      n)
-        net_interface="${OPTARG}"
-        interface_provided="true"
-        ;;
-      a)
-        ip_address="${OPTARG}"
-        ip_address_provided="true"
-        ;;
+      n) net_interface="${OPTARG}" ;;
+      a) ip_address="${OPTARG}" ;;
       l) lan_subnet="${OPTARG}" ;;
       c) connect_to_vpn="true" ;;
       s) show_status="true" ;;
@@ -118,17 +110,15 @@ main() {
   done
 
   if [[ "${firewall_rules}" == "true" ]]; then
-    if [[ "${interface_provided}" == "true" ]] && \
-       [[ "${ip_address_provided}" == "true" ]]; then
-      set_firewall_rules "${net_interface}" "${ip_address}" \
-	      "${lan_subnet}"
+    if [[ -n "${net_interface}" ]] && [[ -n "${ip_address}" ]]; then
+      set_firewall_rules "${net_interface}" "${ip_address}" "${lan_subnet}"
     else
       error "network interface and ip address must be included with -f"
     fi
   fi
 
   if [[ "${connect_to_vpn}" == "true" ]]; then
-    if [[ "${interface_provided}" == "true" ]]; then
+    if [[ -n "${net_interface}" ]]; then
       nmcli connection up id "${net_interface}"
     else
       error "network interface must be included with -c"
