@@ -20,6 +20,7 @@ usage() {
       -c                         Connect to the VPN server
       -C                         Disconnect from the VPN server
       -d                         Disable Docker
+      -D                         Enable Docker
       -f                         Set UFW firewall rules
       -n <network interface>     VPN network interface for firewall rules and
                                  connecting to, or disconnecting from, the VPN
@@ -33,6 +34,11 @@ usage() {
 disable_docker() {
   systemctl stop docker
   systemctl disable docker
+}
+
+enable_docker() {
+  systemctl start docker
+  systemctl enable docker
 }
 
 enable_docker_host_access() {
@@ -108,10 +114,11 @@ main() {
   local show_status
   show_status="false"
 
-  while getopts :fdrhn:a:sl:cC opt; do
+  while getopts :fdDrhn:a:sl:cC opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       d) disable_docker ;;
+      D) enable_docker ;;
       f) firewall_rules="true" ;;
       r) reboot="true" ;;
       n) net_interface="${OPTARG}" ;;
