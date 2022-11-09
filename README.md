@@ -46,6 +46,10 @@ Usage: protonwg OPTIONS
 
 Alexander H Gose
 
+# License
+
+MIT License.  See the [LICENSE](LICENSE) file.
+
 # Acknowledgements
 
 A big thanks to Martin at ProtonVPN support, from whom I learned the UFW commands for the kill switch and commands for querying NetworkManager using the command line interface ([nmcli](https://networkmanager.dev/docs/api/latest/nmcli.html)).  Thank you to all the contributors of the projects mentioned in this [README](README.md) file.
