@@ -42,6 +42,22 @@ Usage: protonwg OPTIONS
       -r                         Reboot computer when done
 ```
 
+# Getting Started
+
+After creating the configuration file "/etc/wireguard/US-VA_1.conf" and including the file in NetworkManager as described in the instructions, open the file and note the IP address to the right of "Endpoint = " at the end of the file.  Do not include the colon or port number.
+
+Connect to the VPN server, set the kill switch using UFW firewall rules, and show the status of the connection and Docker when done:
+
+```
+./protonwg -cfs -n US-VA_1 -a <ip address>
+```
+
+Disconnect from the VPN server and reset the firewall rules:
+
+```
+./protonwg -CF -n US-VA_1
+```
+
 # Author
 
 Alexander H Gose
