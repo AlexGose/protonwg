@@ -29,6 +29,7 @@ usage() {
       -a <ip address>            VPN server IP address for firewall rules
       -l <lan subnet>            LAN subnet for firewall rules (default 
                                  192.168.1.0/24)
+      -L                         List available network interfaces
       -s                         Show connection, docker, and UFW status
       -r                         Reboot computer when done"
 }
@@ -104,6 +105,23 @@ disconnect() {
   fi
 }
 
+print_vpn_interfaces() {
+  local active_interface
+  active_interface="$(nmcli -t c s -a | awk -F: '$3 == "vpn" { print $1 }')"
+  
+  echo "Available network interfaces:"
+  local interfaces
+  readarray -t interfaces < \
+      <(nmcli -t c s | awk -F: '$3 == "vpn" { print $1 }')
+  for interface in "${interfaces[@]}"; do
+    if [[ "${interface}" == "${active_interface}" ]]; then
+      echo "${interface} <--- active connection"
+    else
+      echo "${interface}"
+    fi
+  done
+}
+
 main() {
   local firewall_rules
   firewall_rules="false"
@@ -113,6 +131,8 @@ main() {
   local ip_address
   local lan_subnet
   lan_subnet="192.168.1.0/24"
+  local list_interfaces
+  list_interfaces="false"
   local connect_to_vpn
   connect_to_vpn="false"
   local disconnect_from_vpn
@@ -120,7 +140,7 @@ main() {
   local show_status
   show_status="false"
 
-  while getopts :fFdDrhn:a:sl:cC opt; do
+  while getopts :fFdDrhn:a:sl:cCL opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       d) disable_docker ;;
@@ -131,12 +151,17 @@ main() {
       n) net_interface="${OPTARG}" ;;
       a) ip_address="${OPTARG}" ;;
       l) lan_subnet="${OPTARG}" ;;
+      L) list_interfaces="true" ;;
       c) connect_to_vpn="true" ;;
       C) disconnect_from_vpn="true" ;;
       s) show_status="true" ;;
       ?) usage; error "unrecognized command line option: ${opt}" ;;
     esac
   done
+
+  if [[ "${list_interfaces}" == "true" ]]; then
+    print_vpn_interfaces
+  fi
 
   if [[ "${firewall_rules}" == "true" ]]; then
     if [[ -n "${net_interface}" ]] && [[ -n "${ip_address}" ]]; then

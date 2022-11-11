@@ -38,6 +38,7 @@ Usage: protonwg OPTIONS
       -a <ip address>            VPN server IP address for firewall rules
       -l <lan subnet>            LAN subnet for firewall rules (default 
                                  192.168.1.0/24)
+      -L                         List available network interfaces
       -s                         Show connection, docker, and UFW status
       -r                         Reboot computer when done
 ```
