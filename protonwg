@@ -140,7 +140,7 @@ main() {
   local show_status
   show_status="false"
 
-  while getopts :fFdDrhn:a:sl:cCL opt; do
+  while getopts :hdDfFrn:a:l:LcCs opt; do
     case "${opt}" in
       h) usage; exit 0 ;;
       d) disable_docker ;;
