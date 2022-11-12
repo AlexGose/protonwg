@@ -105,16 +105,17 @@ disconnect() {
   fi
 }
 
+print_active_interface() {
+  echo "$(nmcli -t c s -a | awk -F: '$3 == "vpn" { print $1 }')"
+}
+
 print_vpn_interfaces() {
-  local active_interface
-  active_interface="$(nmcli -t c s -a | awk -F: '$3 == "vpn" { print $1 }')"
-  
   echo "Available network interfaces:"
   local interfaces
   readarray -t interfaces < \
       <(nmcli -t c s | awk -F: '$3 == "vpn" { print $1 }')
   for interface in "${interfaces[@]}"; do
-    if [[ "${interface}" == "${active_interface}" ]]; then
+    if [[ "${interface}" == "$(print_active_interface)" ]]; then
       echo "${interface} <--- active connection"
     else
       echo "${interface}"
