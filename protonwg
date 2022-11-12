@@ -122,8 +122,10 @@ connect() {
 }
 
 disconnect() {
-  if [[ -n "$1" ]]; then
-    nmcli connection down id "$1"
+  local active_interface
+  active_interface="$(print_active_interface)"
+  if [[ -n "${active_interface}" ]]; then
+    nmcli connection down id "${active_interface}"
   else
     error "No active interface detected."
   fi
@@ -197,7 +199,7 @@ main() {
     connect "${net_interface}"
   fi
   if [[ "${disconnect_from_vpn}" == "true" ]]; then
-    disconnect "$(print_active_interface)"
+    disconnect
   fi
 
   if [[ "${list_interfaces}" == "true" ]]; then
