@@ -34,7 +34,7 @@ Usage: protonwg OPTIONS
       -F                         Reset (disable) UFW firewall rules.  Will
                                  occur before any new rules are set
       -n <network interface>     VPN network interface for firewall rules and
-                                 connecting to, or disconnecting from, the VPN
+                                 connecting to the VPN
       -a <ip address>            VPN server IP address for firewall rules
       -l <lan subnet>            LAN subnet for firewall rules (default 
                                  192.168.1.0/24)
@@ -56,7 +56,7 @@ Connect to the VPN server, set the kill switch using UFW firewall rules, and sho
 Disconnect from the VPN server and reset the firewall rules:
 
 ```
-./protonwg -CF -n US-VA_1
+./protonwg -CF
 ```
 
 # Author
