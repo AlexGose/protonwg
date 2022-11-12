@@ -160,10 +160,6 @@ main() {
     esac
   done
 
-  if [[ "${list_interfaces}" == "true" ]]; then
-    print_vpn_interfaces
-  fi
-
   if [[ "${firewall_rules}" == "true" ]]; then
     if [[ -n "${net_interface}" ]] && [[ -n "${ip_address}" ]]; then
       set_firewall_rules "${net_interface}" "${ip_address}" "${lan_subnet}"
@@ -178,6 +174,10 @@ main() {
   fi
   if [[ "${disconnect_from_vpn}" == "true" ]]; then
     disconnect "${net_interface}"
+  fi
+
+  if [[ "${list_interfaces}" == "true" ]]; then
+    print_vpn_interfaces
   fi
 
   if [[ "${show_status}" == "true" ]]; then
