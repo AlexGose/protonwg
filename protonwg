@@ -53,13 +53,38 @@ enable_docker_bridge() {
 }
 
 set_firewall_rules() {
-  set_kill_switch $1 $2
-  enable_lan_access $3
+  local ip_address
+  ip_address="$2"
+  if [[ -z "${ip_address}" ]]; then
+    ip_address="$(print_ip_address "$1")"
+  fi
+  if [[ -z "${ip_address}" ]]; then
+    error "IP address not found in \"/etc/wireguard/$1.conf\". Use -a option."
+  fi
+
+  set_kill_switch "$1" "${ip_address}"
+  enable_lan_access "$3"
   if [[ "$(systemctl is-enabled docker)" == "enabled" ]]; then
     enable_docker_bridge
     enable_docker_host_access
   fi
   ufw enable
+}
+
+print_ip_address() {
+  local ip_regex
+  ip_regex="^[\ ]*Endpoint[\ ]?=[\ ]?"
+  ip_regex+="([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})"
+  if [[ -f "/etc/wireguard/$1.conf" ]]; then
+    readarray -t lines < <(cat "/etc/wireguard/$1.conf")
+    for line in "${lines[@]}"; do
+      if [[ "${line}" =~ ${ip_regex} ]]; then
+        echo "${BASH_REMATCH[1]}"
+        return 0
+      fi
+    done
+  fi
+  echo ""
 }
 
 reset_firewall() {
@@ -76,7 +101,6 @@ set_kill_switch() {
 enable_lan_access() {
   ufw allow out to "$1"
 }
-
 
 print_status() {
   echo "Active connections status:"
@@ -101,7 +125,7 @@ disconnect() {
   if [[ -n "$1" ]]; then
     nmcli connection down id "$1"
   else
-    error "network interface must be included with -C"
+    error "No active interface detected."
   fi
 }
 
@@ -161,10 +185,10 @@ main() {
   done
 
   if [[ "${firewall_rules}" == "true" ]]; then
-    if [[ -n "${net_interface}" ]] && [[ -n "${ip_address}" ]]; then
+    if [[ -n "${net_interface}" ]]; then
       set_firewall_rules "${net_interface}" "${ip_address}" "${lan_subnet}"
     else
-      error "network interface and ip address must be included with -f"
+      error "network interface must be included with -f"
     fi
   fi
 
@@ -173,7 +197,7 @@ main() {
     connect "${net_interface}"
   fi
   if [[ "${disconnect_from_vpn}" == "true" ]]; then
-    disconnect "${net_interface}"
+    disconnect "$(print_active_interface)"
   fi
 
   if [[ "${list_interfaces}" == "true" ]]; then
